@@ -438,6 +438,10 @@ class TimerKnexPersist extends KnexPersist {
   getAllReady() {
     return this._db.select().from(this._table).where("expires_at", "<", new Date()).andWhere("active", true);
   }
+
+  getTimersByResource(resource_id) {
+    return this._db.select().from(this._table).where("expires_at", "<", new Date()).andWhere("active", true).andWhere("resource_id", resource_id);
+  }
 }
 
 module.exports = {

@@ -118,6 +118,12 @@ class Timer extends PersistedEntity {
     const timers = await query;
     return _.map(timers, (timer) => Timer.deserialize(timer));
   }
+
+  static async getTimersByResource(resource_id) {
+    let query = this.getPersist().getTimersByResource(resource_id);
+    const timers = await query;
+    return _.map(timers, (timer) => Timer.deserialize(timer));
+  }
 }
 
 class Mock {

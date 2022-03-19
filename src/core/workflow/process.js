@@ -584,6 +584,12 @@ class Process extends PersistedEntity {
     let execution_success = true;
     let [activity_manager, timer] = [null, null];
     while (execution_success && this.status === ProcessStatus.RUNNING) {
+      const timers = await Timer.getTimersByResource(this._id);
+
+      _.map(timers, async (timer) => {
+        await this.timeout(timer, trx);
+      });
+
       const db = Process.getPersist()._db;
 
       let ps = null;
@@ -697,6 +703,14 @@ class Process extends PersistedEntity {
       timer_id: timer.id,
     });
 
+    if (!!timer.params?.reason && timer.params.reason === "ABORT") {
+      emitter.emit("REASON", `ABORT ON PID [${this.id}] STATUS [${this.status}]`, {
+        reason: timer.params.reason
+      });
+      await this.expireProcess();
+      await this.abort();
+    }
+
     this.state = await this.getPersist().getLastStateByProcess(this._id);
     switch (this.status) {
       case ProcessStatus.ERROR:
@@ -705,13 +719,6 @@ class Process extends PersistedEntity {
         break;
       case ProcessStatus.PENDING:
         await this.runPendingProcess(timer.params.actor_data);
-        break;
-      case ProcessStatus.RUNNING:
-        //TODO: Avaliar como expirar um processo running.
-        emitter.emit("PROCESS.TIMEOUT.BAIL", `  CANNOT EXPIRE RUNNING PROCESS PID [${this.id}]`, {
-          process_id: this.id,
-          timer_id: timer.id,
-        });
         break;
       case ProcessStatus.WAITING:
       case ProcessStatus.DELEGATED:

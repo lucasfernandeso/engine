@@ -1,4 +1,5 @@
 const processDependency = require("./process");
+const { Timer } = require("./timer");
 const workflowDependency = require("./workflow");
 
 module.exports.createProcessByWorkflowName = async function (workflow_name, actor_data, initial_bag = {}) {
@@ -31,7 +32,13 @@ module.exports.abortProcess = async function (process_ids) {
   const abort_promises = process_ids.map(async (process_id) => {
     const process = await processDependency.Process.fetch(process_id);
     if (process) {
-      return process.abort();
+      emitter.emit("PROCESS.TIMER.CREATING", `  CREATING PROCESS TIMER ON PID [${process_id}]`, { process_id: process_id });
+      let timer = new Timer("Process", process_id, Timer.timeoutFromNow(0), { actor_data: process.state.result.actor_data, reason: "ABORT" });
+      await timer.save();
+      emitter.emit("PROCESS.TIMER.NEW", `  PROCESS TIMER ON PID [${process_id}] TIMER [${timer.id}]`, {
+        process_id: process_id,
+        timer_id: timer.id,
+      });
     } else {
       throw new Error(`Process not found ${process_id}`);
     }

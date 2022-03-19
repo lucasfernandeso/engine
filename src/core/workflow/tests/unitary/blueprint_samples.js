@@ -2040,6 +2040,60 @@ blueprints_.user_timeout_one_hour = {
   environment: {},
 };
 
+blueprints_.loop = {
+  requirements: [],
+  prepare: [],
+  nodes: [
+    {
+      id: "1",
+      type: "Start",
+      name: "Start node",
+      parameters: {
+        input_schema: {},
+      },
+      next: "2",
+      lane_id: "1",
+    },
+    {
+      id: "2",
+      type: "SystemTask",
+      category: "SetToBag",
+      name: "Set to bag",
+      next: "3",
+      lane_id: "1",
+      parameters: {
+        input: {}
+      },
+    },
+    {
+      id: "3",
+      type: "SystemTask",
+      category: "SetToBag",
+      name: "Set to bag",
+      next: "2",
+      lane_id: "1",
+      parameters: {
+        input: {}
+      },
+    },
+    {
+      id: "4",
+      type: "Finish",
+      name: "Finish node",
+      next: null,
+      lane_id: "1",
+    },
+  ],
+  lanes: [
+    {
+      id: "1",
+      name: "default",
+      rule: lisp.return_true(),
+    },
+  ],
+  environment: {},
+};
+
 blueprints_.parameters = {
   requirements: ["core"],
   prepare: [],
