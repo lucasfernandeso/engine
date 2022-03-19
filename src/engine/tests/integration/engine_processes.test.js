@@ -833,6 +833,20 @@ test("Beat won't break despite orphan timer", async () => {
   }
 });
 
+test("Loop doesn't allow do abort process", async () => {
+  jest.setTimeout(360000);
+  const engine = new Engine(...settings.persist_options);
+  const workflow = await engine.saveWorkflow("loop", "loop", blueprints_.loop);
+  
+  let process = await engine.createProcess(workflow.id, actors_.simpleton);
+  process = await engine.runProcess(process.id, actors_.simpleton);
+  
+  await engine.abortProcess(process.id);
+
+  process = await engine.fetchProcess(process.id)
+  expect(process.status).toBe(ProcessStatus.INTERRUPTED);
+});
+
 const _clean = async () => {
   const persistor = PersistorProvider.getPersistor(...settings.persist_options);
   const activity_persist = persistor.getPersistInstance("Activity");
